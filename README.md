@@ -1,2 +1,2 @@
-# 2025gsc_RitoYamasaki
+# 2025gsc_RitoYamasaki_ZemiReport
 2025年ゼミ論
