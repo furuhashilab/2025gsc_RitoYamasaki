@@ -10,7 +10,7 @@ This study evaluates a human-centered approach to minimal-knowledge disclosure f
 
 ---
 
-## 🎯 研究テーマ / 目的
+## 研究テーマ / 目的
 **テーマ**  
 災害看護における最小知識アクセス制御：マイナンバー基盤と属性ベース認可（ABAC）＋説明可能UIの有効性検証  
 
@@ -21,7 +21,7 @@ This study evaluates a human-centered approach to minimal-knowledge disclosure f
 
 ---
 
-## 🏥 背景
+## 背景
 - **課題**  
   - 災害時、患者本人が意思表示できず、情報不足による誤処置リスクが高い  
   - 過剰情報開示はプライバシー侵害につながる
@@ -32,7 +32,7 @@ This study evaluates a human-centered approach to minimal-knowledge disclosure f
 
 ---
 
-## 🔄 研究の流れ
+## 研究の流れ
 1. **関連研究レビュー**  
    RBAC・ABAC・災害時情報アクセス・説明可能UIに関する先行研究を整理
 2. **ポリシー設計**  
@@ -53,7 +53,7 @@ This study evaluates a human-centered approach to minimal-knowledge disclosure f
 
 ---
 
-## 🗓 スケジュール（10月〜1月）
+## スケジュール（10月〜1月）
 - **10月**：研究設計確定、ポリシー草案、シナリオ作成  
 - **11月**：UIプロトタイプ開発、合成データ投入、動作テスト  
 - **12月**：ユーザ実験実施、データ収集、一次解析  
@@ -61,14 +61,14 @@ This study evaluates a human-centered approach to minimal-knowledge disclosure f
 
 ---
 
-## 🌱 期待される成果
+## 期待される成果
 - 災害現場に適した最小知識アクセスのデザインパターン提示  
 - 過剰開示・見落とし・時間のトレードオフを可視化  
 - 説明可能UI（XAI）の効果を定量評価  
 
 ---
 
-## 🛠 使用ツール
+## 使用ツール
 - **Python + Streamlit**：ABACポリシー検証UI実装  
 - **pandas / matplotlib**：データ収集・可視化  
 - **FHIR合成データ**：模擬患者情報生成  
@@ -76,7 +76,7 @@ This study evaluates a human-centered approach to minimal-knowledge disclosure f
 
 ---
 
-## 🎓 卒論へのつながり
+## 卒論へのつながり
 - 本研究で得られた「臨床UX閾値」を、卒論で扱う耐量子暗号（PQC）導入時の**遅延許容設計基準**として活用  
 - ABAC＋CFが現場で受け入れられる条件を定義し、将来的に**ブロックチェーン監査ログ＋PQC署名**を組み込んだ分散型アクセス制御モデルに発展  
 
