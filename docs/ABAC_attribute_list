@@ -1,0 +1,44 @@
+# ここでは災害看護におけるABACの各属性について考えてみる場所　
+# ABAC attribute list（Disaster Nursing, v0）
+
+> 災害看護スコープで使う ABAC 属性のたたき台  
+> 後日、指導教員・現場ヒアリングで確定（TTL/権威/欠落時の扱いは辞書で詳細化）
+下の属性はCurrent Research and Opem Problems in Attribute-Based Access Control参照
+---
+
+## Subject attributes（利用者・端末側）
+- **role** — 例: `ER_Nurse / ER_Physician / DMAT_Nurse`
+- **license** — 例: `RN / EMT / MD`（失効は即Deny）
+- **org（所属）** — 例: `Hospital_A / Field_ER`
+- **on_duty（勤務中）** *オプション* — 例: `true/false`（本研究では省略可）
+
+---
+
+## Object attributes（データ側）
+- **blood_type** — 例: `ABO`（カテゴリのみ開示）
+- **sensitivity** — 例: `high / med / low`（院内ルールで確定）
+- **patient_consent** — 例: `true/false/unknown`（マイナンバー想定, TTL=変更時のみ）
+- **triage** — 例: `Red / Yellow / Green / Black`（現場トリアージ結果）
+
+---
+
+## Environment attributes（状況・環境）
+- **time_since_disaster** — 例: `int(sec)`（0–21600）／典型TTL: `10m`
+- **geo** — 例: `in_shelter=true/false`（救護所内判定。QR/ビーコン想定）／典型TTL: `5m`
+- **network_state** — 例: `online / offline_weak`（オフライン=最小開示＋遅延監査）
+
+---
+
+## Connection attributes（セッション固有）
+- **purpose** — 例: `救命 / 事務`（救命のみ Override 対象）／TTL: 1 リクエスト
+- ~~**device_trust**~~ *将来* — 研究スコープ外（固定端末前提で簡素化）
+- **session_start** *任意ログ* — 例: `timestamp`（監査用）
+
+---
+
+## Administrative attributes（運用・全体設定）
+- **emergency_declared** : `true/false`（災害モードON/OFF）
+- **override_allowed** : `true/false`（Break-glass許可。本研究は **true**）
+- **attribute_ttl_defaults** : `{"geo":"5m","time":"10m"}`（短期属性の鮮度）
+
+---
