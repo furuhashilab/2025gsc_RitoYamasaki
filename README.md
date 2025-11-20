@@ -1,88 +1,128 @@
-# 2025gsc_RitoYamasaki_ZemiReport
-# 🌐 災害看護におけるABAC＋オフライン＋Override検証計画  
-**Research Plan for ABAC + Offline + Override in Disaster Nursing**
 
----
+# 2025gsc_RitoYamasaki_ZemiReport  
+# 渋谷で歩道の Wi-Fi カバー率を測る / Street Wi-Fi Coverage in Shibuya
 
-## 📄 要旨 / Abstract
 
-**日本語**  
-本研究は，災害看護における医療情報の最小知識開示を実現するため，マイナンバー基盤と属性ベース認可（ABAC）を用いた人間中心設計の有効性を検証する。Geo/Time/Role/PurposeとTriageを核に，許可・拒否の理由と「満たせば許可」の一行ヒントを提示する説明可能性UIを実装し，RBAC／ABAC／ABAC＋UIの3条件でユーザ実験を行う。合成FHIRデータと三つの臨床シナリオを用い，過剰開示・見落とし・タスク達成時間および試行回数・主観評価を指標として定量比較する。本研究は，災害時アクセス制御の過剰×見落とし×時間の同時計測を提示し，臨床現場に適合する最小開示の設計原理を示す。
-
-**English**  
-This study evaluates a human-centered approach to minimal-knowledge disclosure for disaster nursing.  
-Building on Japan’s My Number–based identity layer, we implement attribute-based access control (ABAC) using Geo/Time/Role/Purpose and triage attributes, together with an explainable UI that shows reasons for permit/deny decisions and one-line counterfactual hints (“what to satisfy to permit”). In a controlled user study with synthetic FHIR scenarios, we compare RBAC, ABAC, and ABAC+XUI across four endpoints: over-disclosure, under-disclosure, decision latency, and attempts, plus subjective clarity. The study contributes a joint measurement of privacy exposure and clinical speed, and provides design guidelines for minimal disclosure in emergency care.
-
----
-
-## 🎯 研究テーマ / Objective
+## 💡 概要 / Overview
 
 **日本語**  
-災害時に意識不明患者の「クリティカルな個人情報」へ迅速かつ必要最小限でアクセスする仕組みを設計・検証する。  
-マイナンバーカード認証＋ABACによる動的アクセス制御、オフライン判定、Override機能を統合し、過剰開示・見落とし・判断時間のトレードオフを定量的に評価する。
+本ゼミ論は、Valenzano らの「Potential Street Coverage（PSC）」手法を渋谷で **QGISのみ** で再現することを目標とする。WiGLE で取得した AP 点から r=25/50 m の円バッファ（Dissolve）を作成し、OSM 道路（10 m 分割）と交差長を求め、セル内の被覆比を算出して ECDF 化した。今後は 4 本の回廊で **coverage** と **longest gap** を二軸評価し、暫定最適 *r* を導く。  
 
 **English**  
-Design and evaluate a mechanism for rapid, minimal-disclosure access to critical patient data during disasters.  
-We integrate My Number–based authentication, ABAC-driven dynamic access control, offline decision-making, and emergency override functions, quantifying the trade-offs between over-disclosure, under-disclosure, and decision latency.
+This thesis replicates the **Potential Street Coverage (PSC)** workflow by Valenzano *et al.* in Shibuya using **QGIS only**. WiGLE AP points → circular buffers (r=25/50 m, dissolved) → intersection with 10 m-segmented OSM roads → per-cell coverage ratio → ECDF. Next, four predefined corridors will be surveyed to pick a tentative *r* by jointly optimizing **coverage** and **longest gap**.
 
 ---
 
-## 🔎 背景 / Background
+## 🎯 目的 / Objectives
 
-**日本語**  
-RBACは役割に依存する静的制御であり、災害時の人員・状況変化に適応しにくい。  
-ABACはGeo, Time, Role, Purpose, Triageといった動的属性に基づき、より柔軟な最小知識アクセスを可能にするが、拒否理由が不透明、通信途絶時の判定不能、Override乱用リスクといった課題が残る。
-
-**English**  
-RBAC offers static, role-based control, which struggles with dynamic personnel and situational changes during disasters.  
-ABAC enables fine-grained, context-aware decisions but faces challenges: opaque denials, network dependency, and potential misuse of emergency overrides.
+- 論文の **骨格**（WiGLE → PSC → 道路交差 → セル集計）を **QGIS** で厳密再現  
+- 再現可能性：入出力は **GeoPackage**、平面座標は **EPSG:6677** に統一
 
 ---
 
-## 🧩 研究の流れ / Research Flow
+## 📦 データ / Data
 
-### 🔹 ゼミ論（実装＋机上実験） / Seminar Thesis
-- **ポリシー設計 / Policy Design**  
-  JSON-based ABAC rules (G×T×R×P＋Triage, S.T.T. principle)
-- **UIプロトタイプ / UI Prototype**  
-  Permit/deny reasons, “what to satisfy” hints, red-button override flow
-- **オフライン対応 / Offline Mode**  
-  Local decision cache + delayed audit log sync
-- **机上実験 / Controlled Study**  
-  比較：RBAC vs ABAC vs ABAC+Override  
-  指標：過剰開示率、見落とし率、タスク時間、Override率、主観評価（SUS）
-
-### 🔹 卒論（現場実験＋分析） / Bachelor Thesis
-- 実際の看護師・DMATによる短時間試用
-- オフライン/オンライン条件切替
-- Override使用ログと救命寄与率分析
-- 最適ポリシー曲線（見落とし×過剰開示×時間）の提示
+- **WiGLE CSV**（自採取・渋谷、Wi-Fi のみエクスポート）  
+- **OSM 道路**（Shibuya AOI 抽出、10 m セグメント化）  
+- **AOI**：研究対象ポリゴン（センター街中心）  
+- **座標系**：**EPSG:6677**（平面メートル系、JGD2011 / Japan Plane Rectangular）
 
 ---
 
-## 📅 スケジュール / Timeline (Oct – Jan)
+## 🧪 パイプライン / Pipeline (QGIS)
 
-| 月 / Month | 主なタスク / Key Tasks |
-|-----------|----------------|
-| **10月 / Oct** | 文献レビュー、ポリシー仕様、UIモック作成 |
-| **11月 / Nov** | Python実装、FHIR合成データ、オフラインキャッシュ |
-| **12月 / Dec** | 倫理審査提出、机上実験、統計解析 |
-| **1月 / Jan** | 結果整理、論文執筆、発表 |
+1. **AP 点の読み込み**（WiGLE CSV → 点化、必要に応じて再投影 4326→6677）  
+2. **PSC バッファ作成**：`r ∈ {25, 50} m`、**Dissolve=ON** で二値被覆  
+3. **道路 10 m 分割**：線を距離で分割（10 m）→ 各セグメントの `$length` を保持  
+4. **交差長**：`intersection()` で各セグメントの **len_in_r** を算出  
+5. **セル集計**：グリッド（例：100 m 角）で  
+   - `sum_len_in_r = sum(len_in_r)`  
+   - `sum_len_m   = sum($length)`  
+   - `cell_ratio_r = sum_len_in_r / sum_len_m`  
+
+> 過大計上を避けるため、**複数 AP のバッファは先に Dissolve** して「被覆あり/なし」を二値化。
+---
+
+## 🔬 成果物 / Artifacts（現状）
+
+- `buf_psc_25.gpkg` / `buf_psc_50.gpkg`（Dissolve 済み PSC）  
+- `roads_10m_seg_src.gpkg`（10 m セグメント道路）  
+- `roads_with_psc_25.gpkg` / `roads_with_psc_50.gpkg`（セグメントごと被覆比）  
+- `grid_coverage_25_35_45_50_num.gpkg`（セル被覆の指標列つき）  
+- `ecdf_psc_25_50.csv` / `ecdf_from_qgis_25_35_45_50.csv`（ECDF テーブル）  
+- **Screenshots**：ECDF グラフ、AOI＋PSC マップ
 
 ---
 
-## 🎯 期待される成果 / Expected Outcomes
-- 動作するプロトタイプ（オフライン＋Override＋説明UI）  
-- 定量データ：過剰開示率・見落とし率・判断時間  
-- 現場UX閾値の提示  
-- 卒論に向けた現場実験プロトコル
+## 🛠️ 再現手順（Quick） / Repro Steps (Quick)
+
+1. **データ配置**：WiGLE CSV を `data/raw/` へ（**Wi-Fi のみ**をエクスポート）  
+2. **QGIS** プロジェクトの **CRS=EPSG:6677** を確認  
+3. **スクリプト実行**（例；QGIS Python Console）  
+   - `build_psc_buffers.py` → `buf_psc_25/50.gpkg`  
+   - `roads_intersection_ratio.py` → `roads_with_psc_*.gpkg`  
+4. **スプレッドシート**で `ecdf_*.csv` を可視化（中央値/上位10%点/AUC 等を算出）
+
+
+> 代表点生成（最大 RSSI 採用）の 20 行スクリプトは `scripts/make_representatives.py` を参照。
+
+## 拡張
+- **回廊校正** :再現していた論文は実地調査をしていなかったので、実際に私は測って、論文で仮説で適切としているr =50が適切なのかを渋谷で測る
+
+---
+## これから取り掛かること
+ - **ECDF**：`cell_ratio_r` の分布から ECDF テーブル（CSV）を出力  
+ - **可視化**：`ecdf_*.csv` をスプレッドシートでプロット（中央値・p75・p90・AUC 等）  
+ - **回廊校正（Next）**：4 回廊で **coverage** と **longest gap** を計測 → *r* 暫定決定
+
+
+## 🚶 回廊実測（r 校正） / Corridor Calibration (Next)
+
+- **Corridors**：  
+  C1 井の頭通り入口／C2 旧大山街道〜宮益坂／C3 玉川通り〜西口歩道橋／C4 右下 L 字  
+- **端末**：Pixel 7a（Wi-Fi **ON**・未接続で可）、位置情報 **ON**  
+- **アプリ**：  
+  - **WiGLE**：**Wi-Fi のみ**エクスポート（CSV）  
+  - **OsmAnd**：**回廊ごとに**トラック録画（往復、停止→保存）  
+- **指標**：  
+  - `coverage = covered_length / total_length`  
+  - `longest_gap = max(uncovered_run)`  
+- **目的**：`r ∈ {25,35,45,50,80}` の **coverage↑ & longest_gap↓** のパレート前面から暫定 *r* を決定
+- データは取得済み
 
 ---
 
-## 🛠 使用ツール / Tools
-Python (Streamlit, FastAPI), SQLite, JSON, Matplotlib, Pandas, Figma, Synthetic FHIR data.
+## 📊 中間所見 / Interim Findings
+
+-渋谷のカバー率は高い
+-しかし、一度実験を間違えていた時に測っていた、wifiが使えるか使えないかという結果を見ると、使えるwifiは、表示されているものよりもだいぶ少ない
+-再現するためのデータ収集は揃っているので、一気に終わらせたい
 
 ---
 
-## 🚀 卒論へのつながり / Link to Bachelor Thesis
-Use UX thresholds derived here to design real-world experiments, validating whether ABAC+Override “saves” or “breaks” emergency care, and proposing guidelines for clinical adoption.
+## 🧯 倫理・公開ポリシー / Ethics & Sharing
+
+- **匿名化**：BSSID 非公開／座標は 250 m 粗化して共有  
+- **最小公開**：CSV は要約指標中心、原データは非公開 or 制限付き  
+
+---
+
+## 📚 参考 / Reference
+
+- Valenzano, A., Mana, D., Borean, C., & Servetti, A. (2016).  
+  *Mapping WiFi measurements on OpenStreetMap data for Wireless Street Coverage Analysis.*  
+  PDF: [/mnt/data/FOSS4G_2016_Mapping_WiFi_2017_12_03.pdf](/mnt/data/FOSS4G_2016_Mapping_WiFi_2017_12_03.pdf)
+
+---
+
+## ✅ To-Do（短期）
+
+- [ ] グリッド解像度を上げて **ECDF 計算**（中央値・AUC・上位10%点を報告）  
+- [ ] **回廊 4 本 実測** → coverage & longest-gap を算出  
+- [ ] *r* 暫定決定 & Sensitivity（25/35/45/50） 
+- [ ] 仕上げ図：AOI ヒートマップ、ECDF 図、回廊帯図（モデル vs 実測）
+      
+## 　単語整理
+-理論的な累積分布関数（CDF）の代わり:理論的な分布を仮定せず、実際のデータから計算された関数です。﻿(下の論文ではCDF使用）
+
+
