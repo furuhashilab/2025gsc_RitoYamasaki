@@ -126,11 +126,11 @@ This thesis replicates the **Potential Street Coverage (PSC)** workflow by Valen
 -理論的な累積分布関数（CDF）の代わり:理論的な分布を仮定せず、実際のデータから計算された関数です。﻿(下の論文ではCDF使用）
 
 ## 　使用ツール
--Chat GPT5 Thinking
--Chat GPT5.1 Thinking
--QGIS
--Wigle Wardriving
--Google Pixcel 7a
+- Chat GPT5 Thinking
+- Chat GPT5.1 Thinking
+- QGIS
+- Wigle Wardriving
+- Google Pixcel 7a
 
 
 
