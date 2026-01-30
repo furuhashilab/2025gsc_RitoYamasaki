@@ -106,6 +106,28 @@ OUT_DIR = os.path.expanduser("~/Downloads/corridor_r_outputs")
    - `native:clip` で道路をバッファ領域内にクリップ (`covered_roads`)
    - `native:intersection` で `covered_roads` × グリッド
    - 各 `grid_id` ごとに被覆道路長 `covered_len_m` を集計
+### 4.2 ECDF summary & plots
+
+ECDF の集計指標（ECDF(0), P(coverage>=0.8), median coverage_ratio）は、
+QGIS から出力した `data/ecdf_grid_coverage_ratio.csv` を
+Google スプレッドシートに読み込み、セルに設定した数式で計算した。
+
+本リポジトリには、上記スプレッドシートで計算済みの結果だけを
+`derived/ecdf_summary.csv` として含めている。
+（数式はスプレッドシート上で確認可能であり、必要に応じて再利用できる。）
+
+In this repository, the ECDF-based summary metrics  
+(ECDF(0), P(coverage>=0.8), median coverage_ratio) are **not**
+computed by a Python script.
+
+Instead, `data/ecdf_grid_coverage_ratio.csv` exported from QGIS
+is loaded into a Google Spreadsheet, and the metrics are derived
+using documented cell formulas.
+
+Only the final aggregated table is stored in this repo
+as `derived/ecdf_summary.csv`, which is used to produce the plots
+of r–ECDF(0), r–P(coverage>=0.8), and r–median coverage_ratio.
+
    
 
 
