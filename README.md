@@ -1,136 +1,248 @@
-
-# 2025gsc_RitoYamasaki_ZemiReport  
-# 渋谷で歩道の Wi-Fi カバー率を測る / Street Wi-Fi Coverage in Shibuya
-
-
-## 概要 / Overview
-
-**日本語**  
-本ゼミ論は、Valenzano らの「Potential Street Coverage（PSC）」手法を渋谷で **QGISのみ** で再現することを目標とする。WiGLE で取得した AP 点から r=25/50 m の円バッファ（Dissolve）を作成し、OSM 道路（10 m 分割）と交差長を求め、セル内の被覆比を算出して ECDF 化した。今後は 4 本の回廊で **coverage** と **longest gap** を二軸評価し、暫定最適 *r* を導く。  
-
-**English**  
-This thesis replicates the **Potential Street Coverage (PSC)** workflow by Valenzano *et al.* in Shibuya using **QGIS only**. WiGLE AP points → circular buffers (r=25/50 m, dissolved) → intersection with 10 m-segmented OSM roads → per-cell coverage ratio → ECDF. Next, four predefined corridors will be surveyed to pick a tentative *r* by jointly optimizing **coverage** and **longest gap**.
+# 2025gsc_RitoYamasaki_ZemiReport
+## 渋谷で歩道の Wi-Fi カバー率を測る / Street Wi-Fi Coverage in Shibuya
 
 ---
 
-##  目的 / Objectives
+## 1. 概要 / Overview
 
-- 論文の **骨格**（WiGLE → PSC → 道路交差 → セル集計）を **QGIS** で厳密再現  
-- 再現可能性：入出力は **GeoPackage**、平面座標は **EPSG:6677** に統一
+### 日本語
+本ゼミ論では、Valenzano ら (2016) が提案した **Potential Street Coverage (PSC)** 手法を、東京都渋谷の 500 m × 500 m AOI（センター街周辺）に対して **QGIS のみ** を用いて再現し、Wi-Fi アクセスポイント (AP) の「歩道カバー率」を定量評価する。
 
----
+WiGLE で取得した AP 点群から半径 $r$ の円バッファを生成し、OpenStreetMap (OSM) の道路ネットワークを 10 m セグメントに分割した上で交差長を計算する。さらに AOI 全体を 25 m メッシュに分割し、各グリッド内の道路被覆率 (coverage ratio) を集計、**ECDF (Empirical Cumulative Distribution Function)** により $r$ の違いによるカバー率の分布変化を解析する。
 
-## データ / Data
+本リポジトリは、以下を含む：
 
-- **WiGLE CSV**（自採取・渋谷、Wi-Fi のみエクスポート）  
-- **OSM 道路**（Shibuya AOI 抽出、10 m セグメント化）  
-- **AOI**：研究対象ポリゴン（センター街中心）  
-- **座標系**：**EPSG:6677**（平面メートル系、JGD2011 / Japan Plane Rectangular）
+- QGIS 用 1 本のスクリプトで **「25 m グリッド × $r \in \{5,10,15,20,25,35,45,50\}$」の coverage ratio と ECDF を一括計算**
+- 出力 CSV から、Spreadsheet 等で **最適な $r$ (AP カバレッジ半径)** を選定するプロセス
 
----
+### English
+This study replicates the **Potential Street Coverage (PSC)** methodology proposed by Valenzano et al. (2016) in a **500 m × 500 m AOI in Shibuya, Tokyo**, using **QGIS only**.
 
-##  パイプライン / Pipeline (QGIS)
+Wi-Fi access points (APs) collected via WiGLE are buffered with radius $r$, and intersected with 10 m–segmented OpenStreetMap (OSM) roads. The AOI is further divided into a 25 m grid; within each cell, the **road coverage ratio** is computed and summarized as an **Empirical Cumulative Distribution Function (ECDF)** for multiple radii $r \in \{5, 10, 15, 20, 25, 35, 45, 50\}$.
 
-1. **AP 点の読み込み**（WiGLE CSV → 点化、必要に応じて再投影 4326→6677）  
-2. **PSC バッファ作成**：`r ∈ {25, 50} m`、**Dissolve=ON** で二値被覆  
-3. **道路 10 m 分割**：線を距離で分割（10 m）→ 各セグメントの `$length` を保持  
-4. **交差長**：`intersection()` で各セグメントの **len_in_r** を算出  
-5. **セル集計**：グリッド（例：100 m 角）で  
-   - `sum_len_in_r = sum(len_in_r)`  
-   - `sum_len_m   = sum($length)`  
-   - `cell_ratio_r = sum_len_in_r / sum_len_m`  
+This repository contains:
 
-> 過大計上を避けるため、**複数 AP のバッファは先に Dissolve** して「被覆あり/なし」を二値化。
----
-
-## 成果物 / Artifacts（現状）
-
-- `buf_psc_25.gpkg` / `buf_psc_50.gpkg`（Dissolve 済み PSC）  
-- `roads_10m_seg_src.gpkg`（10 m セグメント道路）  
-- `roads_with_psc_25.gpkg` / `roads_with_psc_50.gpkg`（セグメントごと被覆比）  
-- `grid_coverage_25_35_45_50_num.gpkg`（セル被覆の指標列つき）  
-- `ecdf_psc_25_50.csv` / `ecdf_from_qgis_25_35_45_50.csv`（ECDF テーブル）  
-- **Screenshots**：ECDF グラフ、AOI＋PSC マップ
+- A single QGIS Python script that computes **25 m grid–based coverage ratios and ECDFs for all radii in one shot**
+- CSV outputs that can be post-processed (e.g., in Google Sheets) to select an **optimal AP coverage radius** for this AOI.
 
 ---
 
-## 再現手順（Quick） / Repro Steps (Quick)
+## 2. 目的 / Objectives
 
-1. **データ配置**：WiGLE CSV を `data/raw/` へ（**Wi-Fi のみ**をエクスポート）  
-2. **QGIS** プロジェクトの **CRS=EPSG:6677** を確認  
-3. **スクリプト実行**（例；QGIS Python Console）  
-   - `build_psc_buffers.py` → `buf_psc_25/50.gpkg`  
-   - `roads_intersection_ratio.py` → `roads_with_psc_*.gpkg`  
-4. **スプレッドシート**で `ecdf_*.csv` を可視化（中央値/上位10%点/AUC 等を算出）
+### 日本語
+- Valenzano ら (2016) の PSC 手法を、渋谷 AOI において QGIS 上で再現する
+- WiGLE AP 点群・OSM 道路・25 m グリッドを用い、「グリッド内道路のうち、Wi-Fi で実際にカバーされている割合」を算出する
+- $r$ の感度分析（5〜50 m）を行い、**ゼロカバー率と高カバー率セルの割合から「現実的な $r$」を決定**する
+- 処理はすべて EPSG:6677 上の QGIS GUI + Python コンソールで完結させ、再現可能なスクリプトとフォルダ構成を GitHub に残す
 
-
-> 代表点生成（最大 RSSI 採用）の 20 行スクリプトは `scripts/make_representatives.py` を参照。
-
-## 拡張
-- **回廊校正** :再現していた論文は実地調査をしていなかったので、実際に私は測って、論文で仮説で適切としているr =50が適切なのかを渋谷で測る
-
----
-## これから取り掛かること
- - **ECDF**：`cell_ratio_r` の分布から ECDF テーブル（CSV）を出力  
- - **可視化**：`ecdf_*.csv` をスプレッドシートでプロット（中央値・p75・p90・AUC 等）  
- - **回廊校正（Next）**：4 回廊で **coverage** と **longest gap** を計測 → *r* 暫定決定
-
-
-##  回廊実測（r 校正） / Corridor Calibration (Next)
-
-- **Corridors**：  
-  C1 井の頭通り入口／C2 旧大山街道〜宮益坂／C3 玉川通り〜西口歩道橋／C4 右下 L 字  
-- **端末**：Pixel 7a（Wi-Fi **ON**・未接続で可）、位置情報 **ON**  
-- **アプリ**：  
-  - **WiGLE**：**Wi-Fi のみ**エクスポート（CSV）  
-  - **OsmAnd**：**回廊ごとに**トラック録画（往復、停止→保存）  
-- **指標**：  
-  - `coverage = covered_length / total_length`  
-  - `longest_gap = max(uncovered_run)`  
-- **目的**：`r ∈ {25,35,45,50,80}` の **coverage↑ & longest_gap↓** のパレート前面から暫定 *r* を決定
-- データは取得済み
+### English
+- Reproduce the PSC workflow of Valenzano et al. (2016) in Shibuya AOI using QGIS
+- Compute, for each 25 m grid cell, **the fraction of road length covered by AP buffers**
+- Perform a sensitivity analysis over radii $r = 5\text{--}50\text{ m}$, and **select a realistic AP coverage radius** based on zero-coverage rate and high-coverage cell proportion
+- Keep all processing within EPSG:6677 in QGIS (GUI + Python console), and publish a reproducible script and folder layout on GitHub
 
 ---
 
-## 中間所見 / Interim Findings
+## 3. データ / Data
 
--渋谷のカバー率は高い
--しかし、一度実験を間違えていた時に測っていた、wifiが使えるか使えないかという結果を見ると、使えるwifiは、表示されているものよりもだいぶ少ない
--再現するためのデータ収集は揃っているので、一気に終わらせたい
+### 3.1 使用レイヤ / Layers Used
+（この README は、以下の最終加工レイヤが QGIS プロジェクトに読み込まれていることを前提とする）
+
+- **AP points**
+  - レイヤ名: `ap_gt_points_6677`
+  - 内容: Shibuya AOI 内の WiGLE ログから作成した AP 代表点
+  - CRS: EPSG:6677
+  - 公開上の注意: BSSID/SSID 等の個人・機器特定情報は削除または秘匿済み
+
+- **Road segments (10 m)**
+  - レイヤ名: `roads_10m_seg_src`
+  - 内容: AOI 内の OSM 道路を抽出し、10 m セグメントに分割したライン
+  - CRS: EPSG:6677
+  - 各フィーチャには `$length` ($\approx 10\text{ m}$) が保持される
+
+- **Area of Interest (AOI)**
+  - レイヤ名: `aoi`
+  - 内容: 渋谷センター街周辺をおおむね 500 m × 500 m で囲んだポリゴン
+  - CRS: EPSG:6677
+
+### 3.2 公開ポリシー / Publication Policy
+- 生の WiGLE CSV（BSSID/SSID を含むログ）は**リポジトリには含めない**
+- 必要に応じて、匿名化・粗化された AP 点レイヤのみを含める
+- 公開の中心は、`grid_coverage_ratio_by_r.csv` や `ecdf_grid_coverage_ratio.csv` といった **集計済み CSV** とする
 
 ---
 
-##  倫理・公開ポリシー / Ethics & Sharing
+## 4. 実装概要 / Implementation Overview
 
-- **匿名化**：BSSID 非公開／座標は 250 m 粗化して共有  
-- **最小公開**：CSV は要約指標中心、原データは非公開 or 制限付き  
+### 4.1 スクリプト / Script
+
+QGIS Python コンソールから呼び出す 1 本のスクリプト：
+`scripts/wifi_grid_coverage_ecdf_25m.py`
+
+内部パラメータ設定（抜粋）：
+
+```python
+AP_NAME    = "ap_gt_points_6677"
+ROADS_NAME = "roads_10m_seg_src"
+AOI_NAME   = "aoi"
+
+CELL_SIZE_M = 25
+R_LIST = [5, 10, 15, 20, 25, 35, 45, 50]  # 分析対象 r
+
+TARGET_CRS = QgsCoordinateReferenceSystem("EPSG:6677")
+OUT_DIR = os.path.expanduser("~/Downloads/corridor_r_outputs")
+処理フローは以下の通り：
+
+1. レイヤ読み込み＆必要に応じて再投影（EPSG:6677 へ）
+2. AOI 内に 25 m グリッドを作成
+   - `native:creategrid` で矩形ポリゴンを生成
+   - `native:clip` で AOI にクリップ
+   - `grid_id` フィールドを付与（`$id`）
+3. 道路 × グリッドの交差長（総延長）を計算
+   - `native:intersection` で `roads_10m_seg_src` とグリッドを交差
+   - 各 `grid_id` ごとに道路長 `total_len_m` を集計
+4. 各 $r$ について AP バッファと道路の交差長を計算
+   - `native:buffer`（DISSOLVE=TRUE）で AP を $r$ m バッファに溶解
+   - `native:clip` で道路をバッファ領域内にクリップ (`covered_roads`)
+   - `native:intersection` で `covered_roads` × グリッド
+   - 各 `grid_id` ごとに被覆道路長 `covered_len_m` を集計
+   
+
+
+5. Coverage Ratio の算出
+   - 各セルについて以下の式を計算（道路が存在するセルのみ）：
+     $$coverage\_ratio = \frac{covered\_len\_m}{total\_len\_m}$$
+6. ECDF の作成
+   - $r$ ごとに `coverage_ratio` のリストをソートし、経験分布 $F(x)$ を計算：
+     $$F(x_i) = \frac{i}{N}$$
+7. coverage_ratio と ecdf を $r$ ごとに出力
 
 ---
 
-##  参考 / Reference
+## 5. 出力ファイル / Outputs
+スクリプト実行後、`OUT_DIR` に以下の 2 つの CSV が生成される：
 
-- Valenzano, A., Mana, D., Borean, C., & Servetti, A. (2016).  
-  *Mapping WiFi measurements on OpenStreetMap data for Wireless Street Coverage Analysis.*  
-  PDF: [/mnt/data/FOSS4G_2016_Mapping_WiFi_2017_12_03.pdf](/mnt/data/FOSS4G_2016_Mapping_WiFi_2017_12_03.pdf)
+### `grid_coverage_ratio_by_r.csv`
+| column | description |
+| :--- | :--- |
+| r | AP バッファ半径 [m] (5,10,15,20,25,35,45,50) |
+| grid_id | グリッド ID |
+| total_len_m | セル内の道路総延長 |
+| covered_len_m | AP バッファ内に含まれる道路延長 |
+| coverage_ratio | `covered_len_m` / `total_len_m` |
+
+### `ecdf_grid_coverage_ratio.csv`
+| column | description |
+| :--- | :--- |
+| r | AP バッファ半径 [m] |
+| coverage_ratio | 横軸 $x$ |
+| ecdf | 経験累積分布 $F(x)$ |
 
 ---
 
-##  To-Do（短期）
+## 6. 再現手順 / Reproduction Steps
 
-- [ ] グリッド解像度を上げて **ECDF 計算**（中央値・AUC・上位10%点を報告）  
-- [ ] **回廊 4 本 実測** → coverage & longest-gap を算出  
-- [ ] *r* 暫定決定 & Sensitivity（25/35/45/50） 
-- [ ] 仕上げ図：AOI ヒートマップ、ECDF 図、回廊帯図（モデル vs 実測）
-      
-## 　単語整理
--理論的な累積分布関数（CDF）の代わり:理論的な分布を仮定せず、実際のデータから計算された関数です。﻿(下の論文ではCDF使用）
+### 日本語
+1. QGIS プロジェクトを開き、CRS を **EPSG:6677** に設定する。
+2. 以下の 3 レイヤを読み込む：
+   - `ap_gt_points_6677`
+   - `roads_10m_seg_src`
+   - `aoi`
+3. QGIS の Python コンソールを開き、次を実行：
+   ```python
+   exec(open("scripts/wifi_grid_coverage_ecdf_25m.py", encoding="utf-8").read())
+4. コンソールログに表示されるパス（例: `~/Downloads/corridor_r_outputs`）に CSV が生成される。
+5. これらを Google スプレッドシート等に読み込み、以下を集計する（本リポジトリの `summary.csv` に相当）。
+   - ECDF(0): `coverage_ratio = 0` のときの ecdf 値
+   - P(coverage ≥ 0.8): `coverage_ratio ≥ 0.8` のセル比率
+   - median: `ECDF = 0.5` のときの `coverage_ratio`
 
-## 　使用ツール
-- Chat GPT5 Thinking
-- Chat GPT5.1 Thinking
-- QGIS
-- Wigle Wardriving
-- Google Pixcel 7a
+### English
+1. Open a QGIS project and set CRS to EPSG:6677.
+2. Load the three layers: `ap_gt_points_6677`, `roads_10m_seg_src`, `aoi`.
+3. Open the QGIS Python console and run:
+   ```python
+   exec(open("scripts/wifi_grid_coverage_ecdf_25m.py", encoding="utf-8").read())
+4. The script prints the output directory; CSVs are created there.
+5. Import the CSVs into a spreadsheet and compute metrics (ECDF(0), P(coverage ≥ 0.8), median).
+
+## 7. $r$ 感度分析の結果 / Sensitivity Results for $r$
+`ecdf_grid_coverage_ratio.csv` から集計した結果（`summary.csv`）は以下の通り：
 
 
+
+### 7.1 指標の定義 / Metric Definitions
+- ECDF(0): `coverage_ratio = 0` のセル割合（= ゼロカバー率）
+- P(coverage ≥ 0.8): `coverage_ratio ≥ 0.8` のセル割合（= 高カバー率セルの比率）
+- median coverage_ratio: `ECDF = 0.5` のときの `coverage_ratio`（= 典型的セルのカバー率）
+
+### 7.2 数値結果 / Numerical Results
+| r [m] | ECDF(0) (Zero cov.) | P(coverage ≥ 0.8) | median coverage_ratio |
+| :---: | :---: | :---: | :---: |
+| 5 | 0.2862 | 0.2862 | 0.424 |
+| 10 | 0.1484 | 0.6254 | 1.000 |
+| 15 | 0.0813 | 0.8092 | 1.000 |
+| 20 | 0.0495 | 0.8799 | 1.000 |
+| 25 | 0.0177 | 0.9399 | 1.000 |
+| 35 | 0.0035 | 0.9894 | 1.000 |
+| 45 | 0.0000 | 0.9965 | 1.000 |
+| 50 | 0.0000 | 1.0000 | 1.000 |
+(Values rounded to 4 decimal places)
+
+
+## 8. 本研究で採用した $r$ の決定 / Choice of $r$ in This Study
+
+### 8.1 判定条件 / Selection Criteria
+本研究では、25 m グリッドに対して AP バッファの半径 $r$ を決める際、以下の 2 条件を「十分なカバー品質」の目安とした：
+
+1. ゼロカバー率 ECDF(0) < 0.02 （未カバーセルを全体の 2% 未満に抑える）
+2. P(coverage ≥ 0.8) ≥ 0.9 （セルの 90%以上が 80% 以上カバーされている）
+
+### 8.2 判定結果 / Outcome
+- r = 20 m
+  - ECDF(0) ≈ 0.0495 → 条件1を満たさない
+  - P(coverage ≥ 0.8) ≈ 0.8799 → 条件2ギリギリ未達
+- r = 25 m
+  - ECDF(0) ≈ 0.0177 < 0.02
+  - P(coverage ≥ 0.8) ≈ 0.9399 ≥ 0.9
+  - → 両条件を同時に満たす最小の $r$
+- r ≥ 35 m
+  - ECDF(0) → 0.0, P(coverage ≥ 0.8) → 1.0 へ漸近
+  - ただし $r$ を大きくするほど、「別セルに属する細街路」をまとめて塗りつぶす形になり、空間解像度の低下が懸念される
+
+### 8.3 結論 / Conclusion
+以上より、渋谷 AOI (500 m × 500 m) における PSC 解析では、
+
+1. ゼロカバーセルを 2% 未満に抑え
+2. セルの 94% 程度を十分にカバーしつつ
+3. $r$ を過度に大きくしない
+
+というトレードオフの観点から、AP バッファ半径として $r = 25 \text{ m}$ を採用した。
+
+---
+
+## 9. 制約と限界 / Limitations
+
+### 日本語
+- WiGLE 由来データの偏り: ログ収集は任意の歩行経路に依存しており、大通りと細街路でサンプリング密度が異なる可能性がある。
+- セルサイズ固定 (25 m): 本リポジトリでは 25 m グリッドのみを対象としており、10 m / 50 m グリッドとの比較（セルサイズ感度分析）は実施していない。そのため、セルサイズに依存する効果は今後の課題とする。
+- 時間的変動の無視: 全期間の WiGLE ログを 1 つの静的データセットとして扱っており、時間帯や曜日による AP 稼働状況の変化は考慮していない。
+
+### English
+- Sampling bias from WiGLE: Data collection depends on arbitrary walking routes; main streets and alleys may have different sampling densities.
+- Fixed grid size (25 m): This repository focuses on 25 m grids only; sensitivity to grid size (e.g., 10 m or 50 m) is not analyzed here.
+- Temporal aggregation: WiGLE logs are treated as a single static snapshot; temporal variations in AP availability are not modeled.
+
+---
+
+## 10. 参考文献 / Reference
+- Valenzano, A., Mana, D., Borean, C., & Servetti, A. (2016). Mapping WiFi measurements on OpenStreetMap data for Wireless Street Coverage Analysis. *FOSS4G 2016*.
+
+## 11. 使用ツール / Tools
+- QGIS LTR (macOS)
+- WiGLE Wardriving
+- Google Pixel 7a (data collection)(os16)
+- Google Sheets (ECDF 集計・可視化)
+- ChatGPT-5.1 Thinking (Text & Script Refinement)
+- ChatGPT-5.2 Thinking (Text & Script Refinement)
 
