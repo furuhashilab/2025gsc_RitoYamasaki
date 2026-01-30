@@ -128,7 +128,38 @@ Only the final aggregated table is stored in this repo
 as `derived/ecdf_summary.csv`, which is used to produce the plots
 of r–ECDF(0), r–P(coverage>=0.8), and r–median coverage_ratio.
 
-   
+### 4. Outputs / CSV files
+
+`outputs/` には、QGIS スクリプトと Google スプレッドシートで集計した結果を
+CSV 形式で保存している。
+
+In the `outputs/` directory, we store CSV files generated from the QGIS script
+and post-processing in Google Sheets.
+
+- `ecdf_coverage_ratio_by_r.csv`  
+  - **日本語**：各 r ∈ {5,10,15,20,25,35,45,50} について、グリッドごとの  
+    `coverage_ratio` とその ECDF を記録した生データ。  
+  - **English**: Raw ECDF data of `coverage_ratio` for each grid cell,  
+    for r ∈ {5,10,15,20,25,35,45,50}.
+
+- `ecdf_max_by_r.csv`  
+  - **日本語**：スプレッドシートの「ecdf(MAX)」シートを書き出したもの。  
+    各 r ごとの ECDF の最大値テーブル。  
+  - **English**: Export of the “ecdf(MAX)” sheet in Google Sheets;  
+    table of maximum ECDF values for each radius r.
+
+- `ecdf_sum_by_r.csv`  
+  - **日本語**：スプレッドシートの「ecdf(SUM)」シートを書き出したもの。  
+    ECDF の累積件数に基づく集計表。  
+  - **English**: Export of the “ecdf(SUM)” sheet;  
+    aggregated counts based on the cumulative ECDF.
+
+- `ecdf_summary_r5_50.csv`  
+  - **日本語**：r ごとの要約指標をまとめたテーブル。  
+    列：`r`, `ECDF(0)`, `P(coverage>=0.8)`, `median_coverage_ratio`。  
+  - **English**: Summary table of key indicators for each r.  
+    Columns: `r`, `ECDF(0)`, `P(coverage>=0.8)`, `median_coverage_ratio`.
+
 
 
 5. Coverage Ratio の算出
