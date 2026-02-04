@@ -299,3 +299,6 @@ and post-processing in Google Sheets.
 - ChatGPT-5.1 Thinking (Text & Script Refinement)
 - ChatGPT-5.2 Thinking (Text & Script Refinement)
 
+## 12. スライドはこちら
+https://docs.google.com/presentation/d/1fuVwXpGprAZcy4QfH2TCoqh7lkmzzHIcIkfjJW7coJI/edit?slide=id.g3c3e56accbe_4_7#slide=id.g3c3e56accbe_4_7
+
