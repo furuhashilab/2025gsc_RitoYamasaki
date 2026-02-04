@@ -191,6 +191,8 @@ and post-processing in Google Sheets.
 | coverage_ratio | 横軸 $x$ |
 | ecdf | 経験累積分布 $F(x)$ |
 
+```
+
 ---
 
 ## 6. 再現手順 / Reproduction Steps
